@@ -1,0 +1,102 @@
+/* Develop Pig program to extract data for the following KPIs */
+
+FILE1 = LOAD '/home/bhavesh/weblog.txt' using PigStorage(',') as (IP:chararray,Category1:chararray,Category2:chararray,page:int,statuscode:int);
+GRPD = group FILE1 by IP;  
+IPCOUNT = foreach GRPD generate group,COUNT(FILE1.IP);
+
+/* Count of page views by individual user ie IP, count(*) */
+STORE IPCOUNT into '/home/bhavesh/Count_by_Pageview_by_IndividualUser/' using PigStorage(',');
+
+/*(Exclude status code other than 200) */
+
+FILE_STATUS_CODE_200 = FILTER FILE1 by statuscode == 200;
+
+/*
+Top 2 and bottom 2 records
+Category, total_number_views
+page, total_number_views
+IP, total_number_of_views
+*/
+
+GRPD_CATEGORY1 = group FILE_STATUS_CODE_200 by Category1;
+CNT_FOR_CATEGORY1 = FOREACH GRPD_CATEGORY1 generate group,COUNT(FILE_STATUS_CODE_200.Category1) as COUNTING;
+
+SORTED_CATEGORY1_DEC = ORDER CNT_FOR_CATEGORY1 by COUNTING DESC;
+TOP_2_CATEGORY1 = limit SORTED_CATEGORY1_DEC 2;
+STORE TOP_2_CATEGORY1 into '/home/bhavesh/Top2_By_Category1/' using PigStorage(',');
+
+SORTED_CATEGORY1_ASC = ORDER CNT_FOR_CATEGORY1 by COUNTING ASC;
+BOTTOM_2_CATEGORY1 = limit SORTED_CATEGORY1_ASC 2;
+STORE BOTTOM_2_CATEGORY1 into '/home/bhavesh/Bottom2_By_Category1/' using PigStorage(',');
+
+GRPD_CATEGORY2 = group FILE_STATUS_CODE_200 by Category2;
+CNT_FOR_CATEGORY2 = FOREACH GRPD_CATEGORY2 generate group,COUNT(FILE_STATUS_CODE_200.Category2) as COUNTING;
+
+SORTED_CATEGORY2_DEC = ORDER CNT_FOR_CATEGORY2 by COUNTING DESC;
+TOP_2_CATEGORY2 = limit SORTED_CATEGORY2_DEC 2;
+STORE TOP_2_CATEGORY2 into '/home/bhavesh/Top2_By_Category2/' using PigStorage(',');
+
+SORTED_CATEGORY2_ASC = ORDER CNT_FOR_CATEGORY2 by COUNTING ASC;
+BOTTOM_2_CATEGORY2 = limit SORTED_CATEGORY2_ASC 2;
+STORE BOTTOM_2_CATEGORY2 into '/home/bhavesh/Bottom2_By_Category2/' using PigStorage(',');
+
+GRPD_PAGES = group FILE_STATUS_CODE_200 by page;
+CNT_FOR_PAGE = FOREACH GRPD_PAGES generate group,COUNT(FILE_STATUS_CODE_200.page) as COUNTING;
+
+SORTED_PAGE_DEC = ORDER CNT_FOR_PAGE by COUNTING DESC;
+TOP_2_PAGE = limit SORTED_PAGE_DEC 2;
+STORE TOP_2_PAGE into '/home/bhavesh/Top2_By_PAGE/' using PigStorage(',');
+
+SORTED_PAGE_ASC = ORDER CNT_FOR_PAGE by COUNTING ASC;
+BOTTOM_2_PAGE = limit SORTED_PAGE_ASC 2;
+STORE BOTTOM_2_PAGE into '/home/bhavesh/Bottom2_By_PAGE/' using PigStorage(',');
+
+GRPD_IP = group FILE_STATUS_CODE_200 by IP;
+CNT_FOR_IP = FOREACH GRPD_IP generate group,COUNT(FILE_STATUS_CODE_200.IP) as COUNTING;
+
+SORTED_IP_DEC = ORDER CNT_FOR_IP by COUNTING DESC;
+TOP_2_IP = limit SORTED_IP_DEC 2;
+STORE TOP_2_IP into '/home/bhavesh/Top2_By_IP/' using PigStorage(',');
+
+SORTED_IP_ASC = ORDER CNT_FOR_IP by COUNTING ASC;
+BOTTOM_2_IP = limit SORTED_IP_ASC 2;
+STORE BOTTOM_2_IP into '/home/bhavesh/Bottom2_By_IP/' using PigStorage(',');
+
+/* Total page views / Category wise pageviews / Unique pageviews
+page,total_number_of_views
+category, total_views
+page, total_number_of_unique_views */
+
+GRPD_TOTALPAGES = group FILE1 by page;
+CNT_FOR_TOTALPAGE = FOREACH GRPD_TOTALPAGES generate group,COUNT(FILE1.page) as COUNTING;
+SORTED_PAGES_DEC = ORDER CNT_FOR_TOTALPAGE by COUNTING DESC;
+STORE SORTED_PAGES_DEC into '/home/bhavesh/Total_PAGES_Count/' using PigStorage(',');
+
+GRPD_TOTALCATEGORY1 = group FILE1 by Category1;
+CNT_FOR_TOTALCATEGORY1 = FOREACH GRPD_TOTALCATEGORY1 generate group,COUNT(FILE1.page) as COUNTING;
+SORTED_TOTALCATEGORY1_DEC = ORDER CNT_FOR_TOTALCATEGORY1 by COUNTING DESC;
+STORE SORTED_TOTALCATEGORY1_DEC into '/home/bhavesh/Total_Category1_Count/' using PigStorage(',');
+
+GRPD_TOTALCATEGORY2 = group FILE1 by Category2;
+CNT_FOR_TOTALCATEGORY2 = FOREACH GRPD_TOTALCATEGORY2 generate group,COUNT(FILE1.page) as COUNTING;
+SORTED_TOTALCATEGORY2_DEC = ORDER CNT_FOR_TOTALCATEGORY2 by COUNTING DESC;
+STORE SORTED_TOTALCATEGORY2_DEC into '/home/bhavesh/Total_Category2_Count/' using PigStorage(',');
+
+GRPD_TOTALPAGES_UNIQUEVIEW = group FILE1 by page;
+CNT_FOR_TOTALPAGE_UNIQUEVIEW = FOREACH GRPD_TOTALPAGES_UNIQUEVIEW {
+                                                                internet_protocol = FILE1.IP;
+                                                                unique_internet_protocol = DISTINCT internet_protocol;
+                                                                GENERATE group, COUNT(unique_internet_protocol);
+                                                                };
+STORE CNT_FOR_TOTALPAGE_UNIQUEVIEW into '/home/bhavesh/Page_Total_Number_Of_Unique_Views/' using PigStorage(',');
+
+/*
+Count of status code = 200 / 404 / 400 / 500
+status_code, count
+*/
+
+GRPD = group FILE1 by statuscode;  
+STATUS_CODE_COUNT = foreach GRPD generate group,COUNT(FILE1.statuscode);
+
+STORE STATUS_CODE_COUNT into '/home/bhavesh/Status_Code_Count/' using PigStorage(',');
+
